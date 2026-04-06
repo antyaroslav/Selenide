@@ -5,13 +5,8 @@ import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.chrome.ChromeOptions;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,21 +17,15 @@ import static com.codeborne.selenide.Selenide.open;
 
 public class CardDeliveryTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final String APP_URL = "http://localhost:9999";
 
     @BeforeAll
-    static void configureBrowser() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        Configuration.browserCapabilities = options;
-        Configuration.baseUrl = APP_URL;
+    static void setUpAll() {
+        Configuration.baseUrl = "http://localhost:9999";
     }
 
     @BeforeEach
     void setUp() {
-        Assumptions.assumeTrue(isServerAvailable(), "Run app-card-delivery.jar before tests");
-        open(APP_URL);
+        open("http://localhost:9999");
     }
 
     @Test
@@ -64,19 +53,5 @@ public class CardDeliveryTest {
 
     private String generateDate(int daysToAdd) {
         return LocalDate.now().plusDays(daysToAdd).format(DATE_FORMATTER);
-    }
-
-    private static boolean isServerAvailable() {
-        try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(APP_URL).openConnection();
-            connection.setConnectTimeout(1000);
-            connection.setReadTimeout(1000);
-            connection.connect();
-            int statusCode = connection.getResponseCode();
-            connection.disconnect();
-            return statusCode < 500;
-        } catch (IOException exception) {
-            return false;
-        }
     }
 }

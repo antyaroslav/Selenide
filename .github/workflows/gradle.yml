@@ -23,11 +23,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Start SUT
-        run: |
-          java -jar ./artifacts/app-card-delivery.jar &
-          sleep 15
-          echo "Checking if app is running..."
-          curl -f http://localhost:9999 || exit 1
+        run: java -jar ./artifacts/app-card-delivery.jar &
 
       - name: Build and Test
         run: ./gradlew clean test -Dselenide.headless=true --info
