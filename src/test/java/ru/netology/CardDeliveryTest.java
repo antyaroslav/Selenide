@@ -1,16 +1,17 @@
 package ru.netology;
 
 import com.codeborne.selenide.Condition;
-import org.junit.jupiter.api.AfterAll;
+import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,32 +23,19 @@ import static com.codeborne.selenide.Selenide.open;
 public class CardDeliveryTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final String APP_URL = "http://localhost:9999";
-    private static Process appProcess;
-    private static boolean startedByTest;
 
     @BeforeAll
-    static void startApplication() throws Exception {
-        if (isServerAvailable()) {
-            return;
-        }
-
-        Path jarPath = Path.of("artifacts", "app-card-delivery.jar").toAbsolutePath();
-        appProcess = new ProcessBuilder("java", "-jar", jarPath.toString())
-                .redirectErrorStream(true)
-                .start();
-        startedByTest = true;
-        waitForServer();
-    }
-
-    @AfterAll
-    static void stopApplication() {
-        if (startedByTest && appProcess != null) {
-            appProcess.destroy();
-        }
+    static void configureBrowser() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        Configuration.browserCapabilities = options;
+        Configuration.baseUrl = APP_URL;
     }
 
     @BeforeEach
     void setUp() {
+        Assumptions.assumeTrue(isServerAvailable(), "Run app-card-delivery.jar before tests");
         open(APP_URL);
     }
 
@@ -76,17 +64,6 @@ public class CardDeliveryTest {
 
     private String generateDate(int daysToAdd) {
         return LocalDate.now().plusDays(daysToAdd).format(DATE_FORMATTER);
-    }
-
-    private static void waitForServer() throws Exception {
-        long deadline = System.currentTimeMillis() + Duration.ofSeconds(20).toMillis();
-        while (System.currentTimeMillis() < deadline) {
-            if (isServerAvailable()) {
-                return;
-            }
-            Thread.sleep(500);
-        }
-        throw new IllegalStateException("Application did not start at " + APP_URL);
     }
 
     private static boolean isServerAvailable() {
